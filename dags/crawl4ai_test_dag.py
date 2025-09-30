@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime, timedelta
-from airflow import DAG
-from airflow.operators.python import PythonOperator
-from airflow.operators.bash import BashOperator
+from airflow import DAG  # type: ignore
+from airflow.operators.python import PythonOperator  # type: ignore
+from airflow.operators.bash import BashOperator  # type: ignore
 import sys
 import os
 
