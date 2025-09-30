@@ -1,167 +1,167 @@
-# Contributing to TourismFlow
+# 🤝 Hướng dẫn Đóng góp cho TourismFlow
 
-Thank you for your interest in contributing to TourismFlow! This document provides guidelines and information for contributors.
+Cảm ơn bạn đã quan tâm đến việc đóng góp cho TourismFlow! Tài liệu này cung cấp hướng dẫn và thông tin dành cho các nhà đóng góp.
 
-## 🤝 Code of Conduct
+## 🤝 Quy tắc Ứng xử
 
-By participating in this project, you agree to abide by our Code of Conduct:
+Bằng việc tham gia dự án này, bạn đồng ý tuân thủ Quy tắc Ứng xử của chúng tôi:
 
-- **Be respectful**: Treat everyone with respect and kindness
-- **Be inclusive**: Welcome newcomers and help them get started
-- **Be collaborative**: Work together towards common goals
-- **Be constructive**: Provide helpful feedback and suggestions
+- **Tôn trọng**: Đối xử với mọi người bằng sự tôn trọng và tử tế
+- **Bao dung**: Chào đón người mới và giúp họ bắt đầu
+- **Hợp tác**: Cùng nhau làm việc hướng tới mục tiêu chung
+- **Xây dựng**: Đưa ra phản hồi và gợi ý hữu ích
 
-## 🚀 Getting Started
+## 🚀 Bắt đầu
 
-### Development Environment Setup
+### Thiết lập Môi trường Phát triển
 
-1. **Fork and Clone**
+1. **Fork và Clone**
    ```bash
    git clone https://github.com/SeikoP/tourism-etl-dashboard.git
    cd tourism-etl-dashboard
    ```
 
-2. **Create Virtual Environment**
+2. **Tạo Virtual Environment**
    ```bash
    python -m venv .venv
    source .venv/bin/activate  # Linux/macOS
    .venv\Scripts\activate     # Windows
    ```
 
-3. **Install Dependencies**
+3. **Cài đặt Dependencies**
    ```bash
    pip install -r requirements.txt
    pip install -r requirements-dev.txt
    ```
 
-4. **Set Up Pre-commit Hooks**
+4. **Thiết lập Pre-commit Hooks**
    ```bash
    pre-commit install
    ```
 
-## 📝 How to Contribute
+## 📝 Cách Đóng góp
 
-### Reporting Issues
+### Báo cáo Vấn đề
 
-Before creating an issue, please:
+Trước khi tạo issue, vui lòng:
 
-1. **Search existing issues** to avoid duplicates
-2. **Use the issue templates** provided
-3. **Provide detailed information**:
-   - Steps to reproduce
-   - Expected vs actual behavior
-   - Environment details
-   - Screenshots if applicable
+1. **Tìm kiếm issue hiện có** để tránh trùng lặp
+2. **Sử dụng template issue** được cung cấp
+3. **Cung cấp thông tin chi tiết**:
+   - Các bước tái hiện lỗi
+   - Hành vi mong đợi so với thực tế
+   - Chi tiết môi trường
+   - Screenshots nếu có
 
-### Suggesting Features
+### Đề xuất Tính năng
 
-For feature requests:
+Đối với yêu cầu tính năng:
 
-1. **Use the feature request template**
-2. **Explain the use case** and benefits
-3. **Provide examples** of how it would work
-4. **Consider implementation complexity**
+1. **Sử dụng template feature request**
+2. **Giải thích use case** và lợi ích
+3. **Cung cấp ví dụ** về cách hoạt động
+4. **Xem xét độ phức tạp triển khai**
 
-### Code Contributions
+### Đóng góp Code
 
-#### Branch Naming Convention
+#### Quy ước Đặt tên Branch
 
-- `feature/description` - New features
-- `fix/description` - Bug fixes
-- `docs/description` - Documentation updates
-- `refactor/description` - Code refactoring
-- `test/description` - Test improvements
+- `feature/mo-ta` - Tính năng mới
+- `fix/mo-ta` - Sửa lỗi
+- `docs/mo-ta` - Cập nhật tài liệu
+- `refactor/mo-ta` - Tái cấu trúc code
+- `test/mo-ta` - Cải thiện test
 
-#### Commit Message Format
+#### Định dạng Commit Message
 
-Follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+Tuân theo đặc tả [Conventional Commits](https://www.conventionalcommits.org/):
 
 ```
-type(scope): description
+type(scope): mô tả
 
-[optional body]
+[nội dung tùy chọn]
 
-[optional footer]
+[footer tùy chọn]
 ```
 
-**Types:**
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation changes
-- `style`: Code style changes (formatting, etc.)
-- `refactor`: Code refactoring
-- `test`: Adding or updating tests
-- `chore`: Maintenance tasks
+**Các loại:**
+- `feat`: Tính năng mới
+- `fix`: Sửa lỗi
+- `docs`: Thay đổi tài liệu
+- `style`: Thay đổi style code (formatting, v.v.)
+- `refactor`: Tái cấu trúc code
+- `test`: Thêm hoặc cập nhật tests
+- `chore`: Các tác vụ bảo trì
 
-**Examples:**
+**Ví dụ:**
 ```
-feat(extractor): add hotel amenities extraction
-fix(api): resolve timeout issue in hotel details endpoint
-docs(readme): update installation instructions
+feat(extractor): thêm trích xuất tiện ích khách sạn
+fix(api): giải quyết vấn đề timeout trong API chi tiết khách sạn
+docs(readme): cập nhật hướng dẫn cài đặt
 ```
 
-#### Pull Request Process
+#### Quy trình Pull Request
 
-1. **Create a feature branch** from `main`
-2. **Make your changes** following our coding standards
-3. **Add/update tests** for new functionality
-4. **Update documentation** if needed
-5. **Run the test suite** and ensure all tests pass
-6. **Submit a pull request** with:
-   - Clear title and description
-   - Reference to related issues
-   - Screenshots for UI changes
-   - Test results
+1. **Tạo feature branch** từ `main`
+2. **Thực hiện thay đổi** theo tiêu chuẩn coding của chúng tôi
+3. **Thêm/cập nhật tests** cho chức năng mới
+4. **Cập nhật tài liệu** nếu cần
+5. **Chạy test suite** và đảm bảo tất cả tests pass
+6. **Submit pull request** với:
+   - Tiêu đề và mô tả rõ ràng
+   - Tham chiếu tới issues liên quan
+   - Screenshots cho thay đổi UI
+   - Kết quả test
 
-#### Pull Request Template
+#### Template Pull Request
 
 ```markdown
-## Description
-Brief description of changes
+## Mô tả
+Mô tả ngắn gọn về các thay đổi
 
-## Type of Change
-- [ ] Bug fix
-- [ ] New feature
-- [ ] Breaking change
-- [ ] Documentation update
+## Loại Thay đổi
+- [ ] Sửa lỗi
+- [ ] Tính năng mới
+- [ ] Thay đổi breaking
+- [ ] Cập nhật tài liệu
 
 ## Testing
 - [ ] Unit tests pass
 - [ ] Integration tests pass
-- [ ] Manual testing completed
+- [ ] Manual testing hoàn thành
 
 ## Checklist
-- [ ] Code follows style guidelines
-- [ ] Self-review completed
-- [ ] Documentation updated
-- [ ] Tests added/updated
+- [ ] Code theo đúng style guidelines
+- [ ] Self-review hoàn thành
+- [ ] Tài liệu đã cập nhật
+- [ ] Tests đã thêm/cập nhật
 ```
 
-## 🧪 Testing Guidelines
+## 🧪 Hướng dẫn Testing
 
-### Running Tests
+### Chạy Tests
 
 ```bash
-# Run all tests
+# Chạy tất cả tests
 pytest
 
-# Run with coverage
+# Chạy với coverage
 pytest --cov=src --cov-report=html
 
-# Run specific test file
+# Chạy test file cụ thể
 pytest tests/test_extractor.py
 
-# Run tests with specific marker
+# Chạy tests với marker cụ thể
 pytest -m "not slow"
 ```
 
-### Writing Tests
+### Viết Tests
 
-- **Unit tests**: Test individual functions/methods
-- **Integration tests**: Test component interactions
-- **End-to-end tests**: Test complete workflows
+- **Unit tests**: Test các function/method riêng lẻ
+- **Integration tests**: Test tương tác giữa các component
+- **End-to-end tests**: Test toàn bộ workflow
 
-Example test structure:
+Ví dụ cấu trúc test:
 ```python
 def test_hotel_extraction():
     # Arrange
@@ -179,129 +179,185 @@ def test_hotel_extraction():
 
 ### Test Coverage
 
-- Maintain **>90% test coverage**
-- Focus on **critical paths** and **edge cases**
-- Include **error handling** tests
+- Duy trì **>90% test coverage**
+- Tập trung vào **critical paths** và **edge cases**
+- Bao gồm tests cho **error handling**
 
-## 📚 Documentation Standards
+## 📚 Tiêu chuẩn Tài liệu
 
-### Code Documentation
+### Tài liệu Code
 
-- **Docstrings**: All public functions, classes, and modules
-- **Type hints**: Use for all function parameters and returns
-- **Inline comments**: For complex logic only
+- **Docstrings**: Tất cả functions, classes, và modules public
+- **Type hints**: Sử dụng cho tất cả tham số và giá trị trả về
+- **Inline comments**: Chỉ cho logic phức tạp
 
-Example:
+Ví dụ:
 ```python
 async def extract_hotels(
     location_url: str, 
     max_pages: int = 10
 ) -> List[Dict[str, Any]]:
-    """Extract hotel data from a specific location.
+    """Trích xuất dữ liệu khách sạn từ một địa điểm cụ thể.
     
     Args:
-        location_url: URL of the location page
-        max_pages: Maximum number of pages to crawl
+        location_url: URL của trang địa điểm
+        max_pages: Số trang tối đa để crawl
         
     Returns:
-        List of hotel dictionaries with extracted data
+        Danh sách các dictionary khách sạn với dữ liệu đã trích xuất
         
     Raises:
-        ExtractionError: If extraction fails
+        ExtractionError: Nếu trích xuất thất bại
     """
 ```
 
-### Documentation Updates
+### Cập nhật Tài liệu
 
-- Update **README.md** for user-facing changes
-- Update **API documentation** for endpoint changes
-- Add **examples** for new features
-- Update **changelog** for releases
+- Cập nhật **README.md** cho các thay đổi user-facing
+- Cập nhật **API documentation** cho thay đổi endpoint
+- Thêm **ví dụ** cho tính năng mới
+- Cập nhật **changelog** cho releases
 
-## 🎨 Code Style Guidelines
+## 🎨 Hướng dẫn Code Style
 
 ### Python Style
 
-We follow **PEP 8** with these additions:
+Chúng tôi tuân theo **PEP 8** với các bổ sung sau:
 
-- **Line length**: 88 characters (Black default)
-- **Import sorting**: Use `isort`
-- **Code formatting**: Use `black`
-- **Type checking**: Use `mypy`
+- **Độ dài dòng**: 88 ký tự (Black default)
+- **Sắp xếp import**: Sử dụng `isort`
+- **Định dạng code**: Sử dụng `black`
+- **Kiểm tra kiểu**: Sử dụng `mypy`
 
 ### Pre-commit Hooks
 
-Our pre-commit configuration includes:
-- `black` - Code formatting
-- `isort` - Import sorting
+Cấu hình pre-commit của chúng tôi bao gồm:
+- `black` - Định dạng code
+- `isort` - Sắp xếp import
 - `flake8` - Linting
-- `mypy` - Type checking
-- `pytest` - Test running
+- `mypy` - Kiểm tra kiểu
+- `pytest` - Chạy test
 
-### Code Quality Tools
+### Công cụ Chất lượng Code
 
 ```bash
-# Format code
+# Định dạng code
 black src/
 
-# Sort imports
+# Sắp xếp imports
 isort src/
 
 # Lint code
 flake8 src/
 
-# Type check
+# Kiểm tra kiểu
 mypy src/
 
-# Security check
+# Kiểm tra bảo mật
 bandit -r src/
 ```
 
-## 🏷️ Versioning and Releases
+## 🏷️ Versioning và Releases
 
-We use [Semantic Versioning](https://semver.org/):
+Chúng tôi sử dụng [Semantic Versioning](https://semver.org/):
 
-- **MAJOR**: Breaking changes
-- **MINOR**: New features (backward compatible)
-- **PATCH**: Bug fixes (backward compatible)
+- **MAJOR**: Thay đổi breaking
+- **MINOR**: Tính năng mới (tương thích ngược)
+- **PATCH**: Sửa lỗi (tương thích ngược)
 
-### Release Process
+### Quy trình Release
 
-1. **Update version** in `pyproject.toml`
-2. **Update CHANGELOG.md**
-3. **Create release PR**
-4. **Tag release** after merge
-5. **Publish release** on GitHub
+1. **Cập nhật version** trong `pyproject.toml`
+2. **Cập nhật CHANGELOG.md**
+3. **Tạo release PR**
+4. **Tag release** sau khi merge
+5. **Publish release** trên GitHub
 
-## 🆘 Getting Help
+## 🆘 Nhận Trợ giúp
 
-If you need help:
+Nếu bạn cần trợ giúp:
 
-1. **Check the documentation** first
-2. **Search existing issues** and discussions
-3. **Ask in GitHub Discussions**
-4. **Join our community** chat
-5. **Contact maintainers** directly
+1. **Kiểm tra tài liệu** trước
+2. **Tìm kiếm issues và discussions** hiện có
+3. **Hỏi trong GitHub Discussions**
+4. **Tham gia community** chat
+5. **Liên hệ maintainers** trực tiếp
 
-## 🏆 Recognition
+## 🏆 Ghi nhận
 
-Contributors will be recognized:
+Contributors sẽ được ghi nhận:
 
-- **AUTHORS.md**: List of all contributors
-- **Release notes**: Credit for significant contributions
-- **GitHub contributors**: Automatic recognition
-- **Community highlights**: Featured contributions
+- **AUTHORS.md**: Danh sách tất cả contributors
+- **Release notes**: Ghi công cho những đóng góp quan trọng
+- **GitHub contributors**: Ghi nhận tự động
+- **Community highlights**: Đặc biệt nổi bật các đóng góp
 
-## 📋 Development Checklist
+## 📋 Checklist Phát triển
 
-Before submitting a contribution:
+Trước khi submit một đóng góp:
 
-- [ ] Code follows style guidelines
+- [ ] Code tuân theo style guidelines
 - [ ] Tests pass locally
-- [ ] Documentation updated
-- [ ] Commit messages follow convention
-- [ ] PR template completed
-- [ ] No merge conflicts
-- [ ] Changes are backwards compatible
+- [ ] Tài liệu đã cập nhật
+- [ ] Commit messages theo convention
+- [ ] PR template đã hoàn thành
+- [ ] Không có merge conflicts
+- [ ] Thay đổi tương thích ngược
 
-Thank you for contributing to TourismFlow! 🚀
+## 🎯 Lĩnh vực Đóng góp Ưu tiên
+
+Chúng tôi đặc biệt hoan nghênh đóng góp trong các lĩnh vực:
+
+### 🌐 **Tích hợp Nguồn Dữ liệu**
+- APIs mới (TripAdvisor, Google Places, OpenWeather)
+- Data connectors cho các platform du lịch
+- Extractors cho dữ liệu chính phủ (CSV, Excel)
+- Webhooks và real-time data streams
+
+### 📊 **Phân tích & Trực quan hóa**
+- Dashboard components cho Streamlit/Dash
+- Biểu đồ và visualizations mới
+- Interactive data exploration tools
+- Mobile-responsive dashboard components
+
+### 🤖 **Học máy & AI**
+- Mô hình dự đoán xu hướng du lịch
+- Recommendation engines
+- Sentiment analysis cho reviews
+- Computer vision cho image processing
+
+### 📱 **Frontend & UX**
+- Dashboard UI improvements
+- Mobile app development
+- Progressive Web App features
+- Accessibility enhancements
+
+### 🧪 **Testing & Quality Assurance**
+- Unit tests cho các modules mới
+- Integration tests cho workflows
+- Performance testing và benchmarking
+- Security testing và vulnerability assessment
+
+### 📚 **Documentation & Tutorials**
+- User guides và tutorials
+- API documentation improvements
+- Video tutorials và demos
+- Multilingual documentation
+
+### 🛠️ **Infrastructure & DevOps**
+- CI/CD pipeline improvements
+- Docker và Kubernetes configurations
+- Monitoring và logging enhancements
+- Performance optimization
+
+## 📞 Liên hệ
+
+- **GitHub Issues**: [Tạo issue mới](https://github.com/SeikoP/tourism-etl-dashboard/issues/new)
+- **GitHub Discussions**: [Thảo luận](https://github.com/SeikoP/tourism-etl-dashboard/discussions)
+- **Email**: Contact maintainers qua GitHub profile
+
+---
+
+Cảm ơn bạn đã đóng góp cho TourismFlow! 🚀
+
+**Cùng nhau xây dựng tương lai của Tourism Data Intelligence!** 🏛️✨
