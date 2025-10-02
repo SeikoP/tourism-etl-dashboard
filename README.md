@@ -25,10 +25,13 @@ Xây dựng **hệ thống thu thập – xử lý – trực quan hóa dữ li�
 
 ### ✅ Các Tính năng Đã hoàn thành (Giai đoạn 1)
 
-- **🔄 Nền tảng ETL Pipeline**: Quy trình ETL được điều phối bởi Apache Airflow
+- **🔄 Pipeline ETL Hoàn chỉnh**: Quy trình Extract-Transform-Load đầy đủ với Apache Airflow
 - **🚀 Thu thập Dữ liệu Khách sạn**: Web scraping bất đồng bộ từ VietnamBooking.com
+- **🤖 AI-Enhanced Extraction**: Trích xuất thông minh với tỷ lệ tiện nghi hợp lệ 100%
 - **📊 Phủ sóng Toàn diện**: 3.540+ khách sạn trên 59 địa điểm Việt Nam
 - **🛡️ Bảo vệ Chống Bot**: Điều tiết yêu cầu và xoay vòng user-agent thông minh
+- **🔍 Xác thực Dữ liệu**: Validation, cleaning và tính điểm chất lượng dữ liệu
+- **🗄️ Database Schema**: PostgreSQL với star schema cho dữ liệu du lịch
 - **📈 Kiểm định Chất lượng Dữ liệu**: Kiểm tra tính toàn vẹn và đầy đủ
 - **🔧 Sẵn sàng Sản xuất**: Container hóa Docker với monitoring
 - **📱 API REST Cơ bản**: Endpoints FastAPI cho truy cập dữ liệu khách sạn
@@ -61,14 +64,19 @@ Xây dựng **hệ thống thu thập – xử lý – trực quan hóa dữ li�
 ```
 tourism-etl-dashboard/
 ├── 📁 dags/                    # Apache Airflow DAGs
-│   ├── vietnambooking_pipeline.py    # Pipeline chính
+│   ├── vietnambooking_pipeline.py    # Pipeline ETL hoàn chỉnh
 │   └── crawl4ai_test_dag.py          # Test tích hợp Crawl4AI
 ├── 📁 src/                     # Mã nguồn
 │   ├── api/                    # FastAPI endpoints (cơ bản)
-│   ├── etl/extract/vietnambooking/   # Trích xuất dữ liệu khách sạn
-│   │   ├── extract_locations.py
-│   │   ├── enhanced_hotel_extractor.py
-│   │   └── hotel_details_extractor.py
+│   ├── etl/
+│   │   ├── extract/vietnambooking/   # Trích xuất dữ liệu khách sạn
+│   │   │   ├── extract_locations.py
+│   │   │   ├── enhanced_hotel_extractor.py
+│   │   │   └── ai_hotel_details_extractor.py  # AI-enhanced extraction
+│   │   ├── transform/           # Biến đổi dữ liệu
+│   │   │   └── data_transformer.py    # Validation & cleaning
+│   │   └── load/                # Tải dữ liệu
+│   │       └── data_loader.py         # PostgreSQL bulk loading
 │   └── services/               # Logic nghiệp vụ
 │       ├── collector.py
 │       └── crawl4ai_integration.py   # Tích hợp Crawl4AI
@@ -227,6 +235,59 @@ docker-compose ps
 | **Container hóa** | Docker + Docker Compose | Triển khai dịch vụ |
 | **Ngôn ngữ** | Python 3.12+ | Ngôn ngữ phát triển chính |
 
+## 🗄️ Database Schema
+
+### PostgreSQL Star Schema
+
+Hệ thống sử dụng PostgreSQL với kiến trúc star schema được tối ưu cho phân tích dữ liệu du lịch:
+
+#### 📍 Bảng `locations`
+```sql
+CREATE TABLE locations (
+    id SERIAL PRIMARY KEY,
+    location_name VARCHAR(255) NOT NULL,
+    location_code VARCHAR(100) UNIQUE NOT NULL,
+    url VARCHAR(500),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### 🏨 Bảng `hotels`
+```sql
+CREATE TABLE hotels (
+    id SERIAL PRIMARY KEY,
+    location_id INTEGER REFERENCES locations(id),
+    hotel_name VARCHAR(500) NOT NULL,
+    address TEXT,
+    phone VARCHAR(50),
+    star_rating DECIMAL(2,1),
+    meta_description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+#### 📋 Bảng `hotel_details`
+```sql
+CREATE TABLE hotel_details (
+    id SERIAL PRIMARY KEY,
+    hotel_id INTEGER REFERENCES hotels(id),
+    price_range TEXT,
+    price_analysis JSONB,
+    basic_amenities JSONB,
+    quality_score DECIMAL(3,2),
+    extraction_method VARCHAR(100),
+    extraction_date TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### 🔗 Mối quan hệ Bảng
+- **locations** (1) → (N) **hotels** → (1) **hotel_details**
+- Sử dụng foreign keys để đảm bảo referential integrity
+- Indexing trên các trường thường xuyên query (location_id, hotel_id)
+
 ## 🛠️ Phát triển
 
 ### 🔧 Trạng thái Phát triển Hiện tại
@@ -288,8 +349,14 @@ python src/etl/extract/vietnambooking/extract_locations.py
 # Trích xuất khách sạn cho địa điểm cụ thể
 python src/etl/extract/vietnambooking/enhanced_hotel_extractor.py
 
-# Trích xuất chi tiết khách sạn
-python src/etl/extract/vietnambooking/hotel_details_extractor.py
+# Trích xuất chi tiết khách sạn với AI enhancement
+python src/etl/extract/vietnambooking/ai_hotel_details_extractor.py
+
+# Biến đổi và làm sạch dữ liệu
+python src/etl/transform/data_transformer.py
+
+# Tải dữ liệu vào PostgreSQL
+python src/etl/load/data_loader.py
 
 # Kiểm tra trạng thái pipeline
 python utils/check_airflow_readiness.py
@@ -360,7 +427,7 @@ Chúng tôi hoan nghênh sự đóng góp! Vui lòng làm theo các hướng d�
 
 ## 📊 Schema Dữ liệu
 
-### Cấu trúc Dữ liệu Khách sạn
+### Cấu trúc Dữ liệu Khách sạn (Sau Transform)
 
 ```json
 {
@@ -372,20 +439,43 @@ Chúng tôi hoan nghênh sự đóng góp! Vui lòng làm theo các hướng d�
     "address": "Địa chỉ đầy đủ"
   },
   "pricing": {
-    "min_price": 500000,
-    "max_price": 2000000,
-    "currency": "VND"
+    "price_range": "Tiết kiệm tới 54% 3,660,000 VND",
+    "price_analysis": {
+      "min_price": 3660000.0,
+      "max_price": 4399000.0,
+      "avg_price": 4029500.0,
+      "price_count": 3,
+      "currency": "VND",
+      "formatted_range": "3,660,000 - 4,399,000 VND"
+    }
   },
   "rating": {
-    "score": 8.5,
-    "max_score": 10,
-    "review_count": 245
+    "star_rating": null,
+    "meta_description": "Mô tả từ trang web"
   },
-  "amenities": ["WiFi", "Hồ bơi", "Phòng gym", "Nhà hàng"],
-  "images": ["url1", "url2", "url3"],
-  "extracted_at": "2025-01-01T00:00:00Z"
+  "amenities": ["WiFi miễn phí", "Hồ bơi", "Phòng gym", "Nhà hàng"],
+  "quality_metrics": {
+    "quality_score": 0.85,
+    "data_completeness": 0.92,
+    "validation_status": "passed"
+  },
+  "extraction_info": {
+    "method": "hybrid_ai_beautifulsoup",
+    "extraction_date": "2025-10-02T19:39:07",
+    "ai_extraction_success": false,
+    "basic_extraction_success": true
+  },
+  "processed_at": "2025-10-03T10:00:00Z"
 }
 ```
+
+### Validation Rules
+
+- **Tên khách sạn**: Không được rỗng, độ dài < 500 ký tự
+- **Địa chỉ**: Validation địa chỉ Việt Nam với regex patterns
+- **Giá cả**: Phân tích số từ text, validation range hợp lý (100k - 50M VND)
+- **Tiện nghi**: Chỉ chấp nhận amenities hợp lệ (loại bỏ room listings)
+- **Điểm chất lượng**: Tính toán từ completeness và accuracy (0.0 - 1.0)
 
 ## 📄 Giấy phép
 
