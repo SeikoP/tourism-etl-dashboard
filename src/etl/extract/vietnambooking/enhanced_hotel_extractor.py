@@ -42,6 +42,45 @@ class EnhancedHotelExtractor:
         self.max_retries = 3
         self.current_batch_hotels = []
         
+        # Load location mapping
+        self.location_mapping = self._load_location_mapping()
+        
+    def _load_location_mapping(self) -> Dict[str, str]:
+        """Load location code to name mapping from locations.json"""
+        try:
+            locations_file = os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', 'data', 'raw', 'vietnambooking', 'locations.json')
+            if not os.path.exists(locations_file):
+                # Try absolute path
+                locations_file = '/opt/airflow/data/raw/vietnambooking/locations.json'
+            
+            with open(locations_file, 'r', encoding='utf-8') as f:
+                locations = json.load(f)
+            
+            mapping = {}
+            for loc in locations:
+                mapping[loc['code']] = loc['location_name']
+            
+            logger.info(f"Loaded {len(mapping)} location mappings")
+            return mapping
+            
+        except Exception as e:
+            logger.warning(f"Could not load location mapping: {e}")
+            return {}
+    
+    def _extract_location_from_url(self, url: str) -> tuple[str, str]:
+        """Extract location code and name from hotel URL"""
+        # Pattern: khach-san-{location_code}.html
+        if 'khach-san-' in url and '.html' in url:
+            start = url.find('khach-san-') + len('khach-san-')
+            end = url.find('.html')
+            if start < end:
+                location_code = url[start:end]
+                location_name = self.location_mapping.get(location_code, location_code.replace('-', ' ').title())
+                return location_code, location_name
+        
+        # Fallback: return original location
+        return "", ""
+        
     async def fetch_page(self, url: str) -> str:
         """Fetch page with retry logic"""
         logger.info(f"Fetching: {url}")
@@ -108,14 +147,31 @@ class EnhancedHotelExtractor:
                 if not hotel_name or len(hotel_name) < 2:
                     continue
                     
+                # Skip province overview pages (pattern: "Khách sạn [Province] [number] khách sạn")
+                import re
+                if re.match(r'^Khách sạn .+\d+ khách sạn$', hotel_name):
+                    continue
+                    
                 # Skip only very obvious generic names
                 if hotel_name.lower() in ['khách sạn', 'hotel', 'resort']:
                     continue
                 
+                # Extract correct location from URL
+                extracted_code, extracted_name = self._extract_location_from_url(href)
+                
+                if extracted_code and extracted_name:
+                    # Use extracted location
+                    location_code = extracted_code
+                    location_name = extracted_name
+                else:
+                    # Fallback to original location_data
+                    location_code = current_location_code
+                    location_name = location_data['location_name']
+                
                 # Create simplified hotel object with only essential fields
                 hotel = {
-                    'location_name': location_data['location_name'],
-                    'location_code': location_data['code'],
+                    'location_name': location_name,
+                    'location_code': location_code,
                     'url': href,
                     'name': hotel_name
                 }

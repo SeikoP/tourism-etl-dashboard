@@ -27,9 +27,9 @@ def test_imports():
         print("✅ enhanced_hotel_extractor import successful")
         
         # Test 3: Hotel details extractor import
-        print("\n3. Testing hotel_details_extractor import...")
-        from etl.extract.vietnambooking.hotel_details_extractor import process_hotels_for_details
-        print("✅ hotel_details_extractor import successful")
+        print("\n3. Testing ai_hotel_details_extractor import...")
+        from etl.extract.vietnambooking.ai_hotel_details_extractor import process_hotels_with_ai
+        print("✅ ai_hotel_details_extractor import successful")
         
         # Test 4: Services import (for crawl4ai DAG)
         print("\n4. Testing services import...")

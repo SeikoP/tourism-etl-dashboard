@@ -47,14 +47,14 @@ def test_airflow_imports():
     except Exception as e:
         print(f"❌ enhanced_hotel_extractor import failed: {e}")
         
-    # Test 5: Import hotel_details_extractor
-    print("\n5️⃣ Testing hotel_details_extractor import...")
+    # Test 5: Import ai_hotel_details_extractor
+    print("\n5️⃣ Testing ai_hotel_details_extractor import...")
     try:
-        from hotel_details_extractor import process_hotels_for_details
-        print("✅ hotel_details_extractor import successful") 
-        print(f"process_hotels_for_details function: {process_hotels_for_details}")
+        from ai_hotel_details_extractor import process_hotels_with_ai
+        print("✅ ai_hotel_details_extractor import successful") 
+        print(f"process_hotels_with_ai function: {process_hotels_with_ai}")
     except Exception as e:
-        print(f"❌ hotel_details_extractor import failed: {e}")
+        print(f"❌ ai_hotel_details_extractor import failed: {e}")
         
     # Test 6: List available files
     print("\n6️⃣ Checking file system...")

@@ -36,7 +36,7 @@ def test_dag_imports():
     modules_to_test = [
         ('src.etl.extract.vietnambooking.extract_locations', 'LocationExtractor'),
         ('src.etl.extract.vietnambooking.enhanced_hotel_extractor', 'process_locations_batch_enhanced'),
-        ('src.etl.extract.vietnambooking.hotel_details_extractor', 'process_hotels_for_details')
+        ('src.etl.extract.vietnambooking.ai_hotel_details_extractor', 'process_hotels_with_ai')
     ]
     
     for module_name, class_or_func in modules_to_test:
@@ -71,7 +71,7 @@ def test_file_structure():
         'src/etl/extract/vietnambooking/__init__.py',
         'src/etl/extract/vietnambooking/extract_locations.py',
         'src/etl/extract/vietnambooking/enhanced_hotel_extractor.py',
-        'src/etl/extract/vietnambooking/hotel_details_extractor.py',
+        'src/etl/extract/vietnambooking/ai_hotel_details_extractor.py',
     ]
     
     for file_path in required_files:

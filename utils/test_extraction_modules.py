@@ -52,7 +52,7 @@ def test_extraction_modules():
         return False
     
     try:
-        from hotel_details_extractor import process_hotels_for_details
+        from ai_hotel_details_extractor import process_hotels_with_ai
         logger.info("✓ process_hotels_for_details import successful")
         
     except ImportError as e:
