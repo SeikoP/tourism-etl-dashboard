@@ -34,7 +34,7 @@ async def test_crawl4ai_connection():
         # Test crawl endpoint with a simple URL
         print("\n2. Testing crawl endpoint...")
         test_payload = {
-            "url": "https://httpbin.org/html",
+            "urls": ["https://httpbin.org/html"],
             "extraction_prompt": "Extract the main heading from this page.",
             "extraction_schema": {
                 "type": "object",
