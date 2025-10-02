@@ -71,6 +71,12 @@ class AIHotelDetailsExtractor:
         """Extract detailed hotel information using AI-powered Crawl4AI"""
 
         try:
+            # Check if Crawl4AI service is available first
+            crawl4ai_available = await self._check_crawl4ai_health()
+            if not crawl4ai_available:
+                logger.warning(f"Crawl4AI service not available, using basic extraction for {hotel['name']}")
+                return await self.extract_hotel_details_basic(hotel)
+
             # Prepare AI extraction request
             payload = {
                 "url": hotel['url'],
@@ -115,7 +121,7 @@ class AIHotelDetailsExtractor:
             }
 
             # Try internal Docker network first, then external
-            urls_to_try = [self.crawl4ai_url, self.external_crawl4ai_url]
+            urls_to_try = [self.crawl4ai_url]
 
             for crawl_url in urls_to_try:
                 try:
@@ -164,6 +170,15 @@ class AIHotelDetailsExtractor:
         except Exception as e:
             logger.error(f"Error in AI extraction for {hotel['name']}: {e}")
             return await self.extract_hotel_details_basic(hotel)
+
+    async def _check_crawl4ai_health(self) -> bool:
+        """Check if Crawl4AI service is healthy and available"""
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                response = await client.get(f"{self.crawl4ai_url}/health")
+                return response.status_code == 200
+        except Exception:
+            return False
 
     async def extract_hotel_details_basic(self, hotel: Dict[str, Any]) -> Dict[str, Any]:
         """Fallback basic extraction without AI"""
