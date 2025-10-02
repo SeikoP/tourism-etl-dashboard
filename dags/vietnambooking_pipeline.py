@@ -464,12 +464,14 @@ def validate_results(**context):
 extract_locations = PythonOperator(
     task_id='extract_locations',
     python_callable=extract_locations_task,
+    execution_timeout=timedelta(minutes=10),
     dag=dag,
 )
 
 extract_hotels = PythonOperator(
     task_id='extract_hotels',
     python_callable=extract_hotels_batch,
+    execution_timeout=timedelta(minutes=30),
     dag=dag,
 )
 
@@ -482,6 +484,7 @@ merge_hotels = PythonOperator(
 extract_details = PythonOperator(
     task_id='extract_hotel_details',
     python_callable=extract_hotel_details,
+    execution_timeout=timedelta(minutes=45),
     dag=dag,
 )
 

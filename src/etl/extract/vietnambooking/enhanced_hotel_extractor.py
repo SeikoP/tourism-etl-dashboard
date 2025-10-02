@@ -36,9 +36,9 @@ class EnhancedHotelExtractor:
             'Upgrade-Insecure-Requests': '1'
         }
         
-        # Configuration - Less strict filtering
+        # Configuration - Fast mode for development
         self.batch_size = 5
-        self.delay_range = (2, 4)  # Faster
+        self.delay_range = (0.5, 1.0)  # Much faster for development
         self.max_retries = 3
         self.current_batch_hotels = []
         

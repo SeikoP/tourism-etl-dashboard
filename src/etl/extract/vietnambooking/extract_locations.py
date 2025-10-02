@@ -38,7 +38,7 @@ class LocationExtractor:
         logger.info(f"Fetching main page: {url}")
         
         try:
-            await asyncio.sleep(2 + random.random() * 2)  # Random delay
+            await asyncio.sleep(0.5 + random.random() * 0.5)  # Fast delay for development
             
             async with httpx.AsyncClient(timeout=30.0, headers=self.headers) as client:
                 response = await client.get(url)
