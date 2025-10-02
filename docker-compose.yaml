@@ -75,6 +75,13 @@ x-airflow-common:
     # See https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/logging-monitoring/check-health.html#scheduler-health-check-server
     # yamllint enable rule:line-length
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
+    # Performance optimizations
+    AIRFLOW__SCHEDULER__DAG_DIR_LIST_INTERVAL: '60'
+    AIRFLOW__SCHEDULER__PARSING_PROCESSES: '2'
+    AIRFLOW__CORE__PARALLELISM: '16'
+    # Log serving configuration - Use file-based logging instead of log server
+    AIRFLOW__LOGGING__WORKER_LOG_SERVER_PORT: '0'
+    AIRFLOW__CORE__ENABLE_XCOM_PICKLING: 'true'
     # WARNING: Use _PIP_ADDITIONAL_REQUIREMENTS option ONLY for quick checks.
     # For stability and reduced disk usage in containers, leave empty and build a custom image instead.
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
@@ -86,9 +93,11 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     # Use host logs mount only for persistence during development. For low-disk setups
     # prefer ephemeral tmpfs mounts set per-service (below) or configure a remote logging backend.
-    # - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs  # Commented out to use tmpfs instead
+    - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
+    - ${AIRFLOW_PROJ_DIR:-.}/data:/opt/airflow/data
+    - ${AIRFLOW_PROJ_DIR:-.}/src:/opt/airflow/src
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
@@ -133,9 +142,7 @@ services:
     ports:
       - "8080:8080"
     # Resource limits & ephemeral logs
-    mem_limit: 512m
-    tmpfs:
-      - /opt/airflow/logs
+    mem_limit: 768m
     logging:
       driver: "json-file"
       options:
@@ -143,9 +150,9 @@ services:
         max-file: "3"
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/api/v2/version"]
-      interval: 30s
+      interval: 15s
       timeout: 10s
-      retries: 5
+      retries: 3
       start_period: 30s
     restart: always
     depends_on:
@@ -156,9 +163,7 @@ services:
   airflow-scheduler:
     <<: *airflow-common
     command: scheduler
-    mem_limit: 768m
-    tmpfs:
-      - /opt/airflow/logs
+    mem_limit: 1024m
     logging:
       driver: "json-file"
       options:
@@ -166,9 +171,9 @@ services:
         max-file: "3"
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
-      interval: 30s
+      interval: 15s
       timeout: 10s
-      retries: 5
+      retries: 3
       start_period: 30s
     restart: always
     depends_on:
@@ -180,8 +185,6 @@ services:
     <<: *airflow-common
     command: dag-processor
     mem_limit: 512m
-    tmpfs:
-      - /opt/airflow/logs
     logging:
       driver: "json-file"
       options:
@@ -224,8 +227,6 @@ services:
       airflow-init:
         condition: service_completed_successfully
     mem_limit: 1024m
-    tmpfs:
-      - /opt/airflow/logs
     logging:
       driver: "json-file"
       options:
@@ -376,19 +377,49 @@ services:
       airflow-init:
         condition: service_completed_successfully
 
-  # Crawl4AI Service for advanced web scraping
+  # Crawl4AI Service for advanced web scraping with AI integration
   crawl4ai:
     image: unclecode/crawl4ai:latest
     container_name: crawl4ai-server
     ports:
       - "11235:11235"  # Crawl4AI API port
     environment:
+      # Base Configuration
       - CRAWL4AI_BASE_DIRECTORY=/app/crawl4ai
       - CRAWL4AI_LOG_LEVEL=INFO
+      
+      # AI API Keys (from .env file)
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GROQ_API_KEY=${GROQ_API_KEY:-}
+      - HUGGINGFACE_API_TOKEN=${HUGGINGFACE_API_TOKEN:-}
+      
+      # AI Configuration
+      - CRAWL4AI_ENABLE_AI=${CRAWL4AI_ENABLE_AI:-true}
+      - CRAWL4AI_DEFAULT_MODEL=${CRAWL4AI_DEFAULT_MODEL:-google/gemini-2.5-flash}
+      - CRAWL4AI_MAX_TOKENS=${CRAWL4AI_MAX_TOKENS:-4000}
+      - CRAWL4AI_TEMPERATURE=${CRAWL4AI_TEMPERATURE:-0.1}
+      
+      # Performance Settings
+      - CRAWL4AI_CONCURRENT_REQUESTS=${CRAWL4AI_CONCURRENT_REQUESTS:-5}
+      - CRAWL4AI_REQUEST_TIMEOUT=${CRAWL4AI_REQUEST_TIMEOUT:-180}
+      - CRAWL4AI_MEMORY_LIMIT=${CRAWL4AI_MEMORY_LIMIT:-2048}
+      - CRAWL4AI_CACHE_ENABLED=${CRAWL4AI_CACHE_ENABLED:-true}
     volumes:
       - crawl4ai-data:/app/crawl4ai
-      - ${AIRFLOW_PROJ_DIR:-.}/src:/app/src  # Mount source code
+      - crawl4ai-cache:/app/cache              # AI model cache
+      - crawl4ai-logs:/app/logs                # AI processing logs
+      - ${AIRFLOW_PROJ_DIR:-.}/src:/app/src    # Mount source code
       - ${AIRFLOW_PROJ_DIR:-.}/data:/app/data  # Mount data directory
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+        reservations:
+          cpus: '1.0'  
+          memory: 2G
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:11235/health"]
       interval: 30s
@@ -402,3 +433,5 @@ services:
 volumes:
   postgres-db-volume:
   crawl4ai-data:
+  crawl4ai-cache:    # AI model cache volume
+  crawl4ai-logs:     # AI processing logs volume

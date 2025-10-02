@@ -249,6 +249,34 @@ isort src/
 
 # Kiểm tra kiểu dữ liệu
 mypy src/
+
+### 🧪 Tests Pipeline Crawl4AI + Gemini (Mock)
+
+Để kiểm thử luồng: Crawl trang → Trích lọc khách sạn → Giả lập LLM (Gemini) trả JSON cấu trúc, dùng file `tests/test_crawl4ai_pipeline.py`.
+
+Không cần chạy container `crawl4ai` vì mọi HTTP call đã được mock bằng `monkeypatch`.
+
+Chạy riêng:
+
+```bash
+pytest -q tests/test_crawl4ai_pipeline.py
+```
+
+Hiển thị log chi tiết:
+
+```bash
+pytest -q tests/test_crawl4ai_pipeline.py -o log_cli=true --log-cli-level=INFO
+```
+
+Các kiểm thử gồm:
+1. `test_extract_hotels_pipeline`: xác nhận crawl danh sách (mock)
+2. `test_hotel_detail_extraction_mock`: chi tiết khách sạn (mock)
+3. `test_end_to_end_flow`: full flow + mock LLM trả về structured JSON
+
+Có thể mở rộng trong tương lai để:
+* Kết nối thật tới container Crawl4AI (integration test)
+* Thêm validation schema (pydantic) cho output
+* So sánh số lượng hotels với threshold tối thiểu
 ```
 
 ### Chạy các Thành phần Riêng lẻ
