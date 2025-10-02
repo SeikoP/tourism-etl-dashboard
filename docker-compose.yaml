@@ -86,7 +86,7 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     # Use host logs mount only for persistence during development. For low-disk setups
     # prefer ephemeral tmpfs mounts set per-service (below) or configure a remote logging backend.
-    - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
+    # - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs  # Commented out to use tmpfs instead
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
   user: "${AIRFLOW_UID:-50000}:0"
