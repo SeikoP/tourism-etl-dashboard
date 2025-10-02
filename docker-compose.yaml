@@ -218,6 +218,11 @@ services:
       DUMB_INIT_SETSID: "0"
     restart: always
     depends_on:
+      <<: *airflow-common-depends-on
+      airflow-apiserver:
+        condition: service_healthy
+      airflow-init:
+        condition: service_completed_successfully
     mem_limit: 1024m
     tmpfs:
       - /opt/airflow/logs
@@ -226,11 +231,6 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-      <<: *airflow-common-depends-on
-      airflow-apiserver:
-        condition: service_healthy
-      airflow-init:
-        condition: service_completed_successfully
 
   airflow-triggerer:
     <<: *airflow-common
