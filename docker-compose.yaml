@@ -75,11 +75,11 @@ x-airflow-common:
     # See https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/logging-monitoring/check-health.html#scheduler-health-check-server
     # yamllint enable rule:line-length
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
-  # WARNING: Use _PIP_ADDITIONAL_REQUIREMENTS option ONLY for quick checks.
-  # For stability and reduced disk usage in containers, leave empty and build a custom image instead.
-  _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
+    # WARNING: Use _PIP_ADDITIONAL_REQUIREMENTS option ONLY for quick checks.
+    # For stability and reduced disk usage in containers, leave empty and build a custom image instead.
+    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
     # The following line can be used to set a custom config file, stored in the local config folder
-  AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
+    AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
   # Centralized logging options (Airflow itself uses Python logging, but Docker log driver caps reduce host disk usage)
   # Note: docker-compose logging options are applied per-service below using the 'logging' key.
   volumes:
