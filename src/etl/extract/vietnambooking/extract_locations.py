@@ -114,11 +114,6 @@ class LocationExtractor:
         
         # Method 4: Thêm các địa điểm phổ biến của Việt Nam nếu chưa có
         popular_cities = [
-            'vung-tau', 'phu-quoc', 'sapa', 'ha-long', 'mui-ne', 'quan-1', 
-            'phan-thiet', 'chau-doc', 'tam-coc', 'ninh-binh', 'dong-hoi',
-            'phong-nha', 'dong-ha', 'hue', 'ba-na-hills', 'my-son', 'tra-que',
-            'cat-ba', 'sam-son', 'do-son', 'cua-lo', 'lang-co', 'an-thoi',
-            'bai-chay', 'tuan-chau', 'co-to', 'bach-long-vi', 'ly-son'
         ]
         
         for city in popular_cities:

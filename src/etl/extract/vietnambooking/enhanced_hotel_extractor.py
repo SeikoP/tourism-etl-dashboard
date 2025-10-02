@@ -112,23 +112,12 @@ class EnhancedHotelExtractor:
                 if hotel_name.lower() in ['khách sạn', 'hotel', 'resort']:
                     continue
                 
-                # Extract additional info from surrounding elements
-                price_info = None
-                parent = link.find_parent(['div', 'article', 'section'])
-                if parent:
-                    # Look for price info in nearby text
-                    price_elements = parent.find_all(string=lambda x: x and ('VND' in x or 'VNĐ' in x or 'đ' in x))
-                    if price_elements:
-                        price_info = price_elements[0].strip()[:100]  # Limit length
-                
+                # Create simplified hotel object with only essential fields
                 hotel = {
                     'location_name': location_data['location_name'],
                     'location_code': location_data['code'],
                     'url': href,
-                    'name': hotel_name,
-                    'rating': None,
-                    'address': None,
-                    'price': price_info
+                    'name': hotel_name
                 }
                 hotels.append(hotel)
             

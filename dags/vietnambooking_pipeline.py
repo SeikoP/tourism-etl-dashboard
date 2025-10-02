@@ -242,19 +242,19 @@ def extract_hotel_details(**context):
         logging.info(f"Python path: {sys.path[:3]}")
         logging.info(f"Current working directory: {os.getcwd()}")
 
-        # Try to import process_hotels_for_details
+        # Try to import AI-powered hotel details extractor
         try:
-            from etl.extract.vietnambooking.hotel_details_extractor import process_hotels_for_details
-            logging.info("Successfully imported process_hotels_for_details")
+            from etl.extract.vietnambooking.ai_hotel_details_extractor import process_hotels_with_ai
+            logging.info("Successfully imported AI-powered hotel details extractor")
         except ImportError as e:
-            logging.error(f"Failed to import process_hotels_for_details: {e}")
+            logging.error(f"Failed to import AI hotel details extractor: {e}")
             logging.error(f"Available modules in etl.extract.vietnambooking: {os.listdir(os.path.join(src_path, 'etl/extract/vietnambooking'))}")
             raise
         
-        # Parameters
+        # Parameters for AI extraction
         hotels_file = "/opt/airflow/data/raw/vietnambooking/all_hotels_enhanced.json"
         output_dir = "/opt/airflow/data/raw/vietnambooking/details/"
-        batch_size = 100  # Process 100 hotels per batch
+        batch_size = 10  # Smaller batches for AI processing
         
         # Verify hotels file exists
         if not os.path.exists(hotels_file):
@@ -279,16 +279,16 @@ def extract_hotel_details(**context):
             logging.info(f"Processing details batch {start_idx}-{min(start_idx + batch_size, total_hotels)}")
             
             try:
-                details = asyncio.run(process_hotels_for_details(
+                details = asyncio.run(process_hotels_with_ai(
                     hotels_file, output_dir, start_idx, batch_size
                 ))
                 if details:
                     total_details += len(details)
-                    logging.info(f"Details batch completed: {len(details)} hotels processed")
+                    logging.info(f"AI details batch completed: {len(details)} hotels processed")
                 else:
-                    logging.warning(f"No details extracted from batch {start_idx}")
+                    logging.warning(f"No AI details extracted from batch {start_idx}")
             except Exception as batch_error:
-                logging.error(f"Error processing details batch {start_idx}: {batch_error}")
+                logging.error(f"Error processing AI details batch {start_idx}: {batch_error}")
                 # Continue with next batch instead of failing completely
                 continue
         
@@ -314,8 +314,8 @@ def merge_hotel_details(**context):
         
         all_details = []
         
-        # Find all details batch files
-        pattern = os.path.join(data_dir, "hotel_details_batch_*.json")
+        # Find all AI-generated details batch files
+        pattern = os.path.join(data_dir, "ai_hotel_details_batch_*.json")
         batch_files = glob.glob(pattern)
         batch_files.sort()
         
@@ -484,7 +484,7 @@ merge_hotels = PythonOperator(
 extract_details = PythonOperator(
     task_id='extract_hotel_details',
     python_callable=extract_hotel_details,
-    execution_timeout=timedelta(minutes=45),
+    execution_timeout=timedelta(minutes=60),  # Increased for AI processing
     dag=dag,
 )
 
