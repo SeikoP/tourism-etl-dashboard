@@ -3,8 +3,8 @@
 
 from datetime import datetime, timedelta
 from airflow import DAG  # type: ignore
-from airflow.operators.python import PythonOperator  # type: ignore
-from airflow.operators.bash import BashOperator  # type: ignore
+from airflow.providers.standard.operators.python import PythonOperator  # type: ignore
+from airflow.providers.standard.operators.bash import BashOperator  # type: ignore
 import sys
 import os
 
@@ -31,7 +31,7 @@ dag = DAG(
     'crawl4ai_integration_test',
     default_args=default_args,
     description='Test Crawl4AI integration with Airflow',
-    schedule_interval=None,  # Manual trigger only
+    schedule=None,  # Manual trigger only - Updated for Airflow 2.4+
     catchup=False,
     tags=['crawl4ai', 'test', 'integration'],
 )

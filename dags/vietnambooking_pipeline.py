@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+#!/usfrom airflow.providers.standard.operators.python import PythonOperator  # type: ignore
+from airflow.providers.standard.operators.bash import BashOperator  # type: ignorebin/env python3
 # -*- coding: utf-8 -*-
 
 from datetime import datetime, timedelta
@@ -11,8 +12,8 @@ import asyncio
 import json
 import logging
 
-# Add src to path
-sys.path.append('/opt/airflow/dags/src')
+# Add src to path for imports
+sys.path.append('/opt/airflow/src')
 
 default_args = {
     'owner': 'tourism-team',
@@ -29,14 +30,27 @@ dag = DAG(
     'vietnambooking_full_pipeline',
     default_args=default_args,
     description='Complete VietnamBooking crawling pipeline: locations -> hotels -> details',
-    schedule_interval=timedelta(days=1),  # Run daily
+    schedule=timedelta(days=1),  # Run daily - Updated for Airflow 2.4+
     catchup=False,
     tags=['crawling', 'vietnambooking', 'tourism'],
 )
 
 def extract_locations_task(**context):
     """Task 1: Extract all locations"""
-    from src.etl.extract.vietnambooking.extract_locations import LocationExtractor
+    import sys
+    import os
+    
+    # Add src directory to Python path - ensure it's first
+    src_path = '/opt/airflow/src'
+    if src_path not in sys.path:
+        sys.path.insert(0, src_path)
+    
+    logging.info(f"Python path: {sys.path[:3]}")
+    logging.info(f"Current working directory: {os.getcwd()}")
+    
+    # Import with absolute path
+    sys.path.append('/opt/airflow/src/etl/extract/vietnambooking')
+    from extract_locations import LocationExtractor
     
     extractor = LocationExtractor()
     locations = asyncio.run(extractor.extract_locations())
@@ -53,7 +67,11 @@ def extract_locations_task(**context):
 
 def extract_hotels_batch(**context):
     """Task 2: Extract hotels in batches"""
-    from src.etl.extract.vietnambooking.enhanced_hotel_extractor import process_locations_batch_enhanced
+    import sys
+    
+    # Add specific module path
+    sys.path.append('/opt/airflow/src/etl/extract/vietnambooking')
+    from enhanced_hotel_extractor import process_locations_batch_enhanced
     
     # Parameters
     locations_file = "/opt/airflow/data/raw/vietnambooking/locations.json"
@@ -133,7 +151,11 @@ def merge_hotel_files(**context):
 
 def extract_hotel_details(**context):
     """Task 4: Extract detailed information for each hotel"""
-    from src.etl.extract.vietnambooking.hotel_details_extractor import process_hotels_for_details
+    import sys
+    
+    # Add specific module path
+    sys.path.append('/opt/airflow/src/etl/extract/vietnambooking')
+    from hotel_details_extractor import process_hotels_for_details
     
     # Parameters
     hotels_file = "/opt/airflow/data/raw/vietnambooking/all_hotels_enhanced.json"

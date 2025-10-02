@@ -62,18 +62,30 @@ x-airflow-common:
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__CORE__EXECUTION_API_SERVER_URL: 'http://airflow-apiserver:8080/execution/'
+    # Language and Locale Configuration
+    LANG: 'en_US.UTF-8'
+    LC_ALL: 'en_US.UTF-8'
+    LANGUAGE: 'en_US:en'
+    AIRFLOW__WEBSERVER__DEFAULT_UI_TIMEZONE: 'UTC'
+    # Force English locale for Airflow UI
+    AIRFLOW__WEBSERVER__WEB_SERVER_NAME: 'TourismFlow Airflow'
+    AIRFLOW__WEBSERVER__INSTANCE_NAME: 'TourismFlow ETL Dashboard'
     # yamllint disable rule:line-length
     # Use simple http server on scheduler for health checks
     # See https://airflow.apache.org/docs/apache-airflow/stable/administration-and-deployment/logging-monitoring/check-health.html#scheduler-health-check-server
     # yamllint enable rule:line-length
     AIRFLOW__SCHEDULER__ENABLE_HEALTH_CHECK: 'true'
-    # WARNING: Use _PIP_ADDITIONAL_REQUIREMENTS option ONLY for a quick checks
-    # for other purpose (development, test and especially production usage) build/extend Airflow image.
-    _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-crawl4ai requests}  # Add crawl4ai client
+  # WARNING: Use _PIP_ADDITIONAL_REQUIREMENTS option ONLY for quick checks.
+  # For stability and reduced disk usage in containers, leave empty and build a custom image instead.
+  _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
     # The following line can be used to set a custom config file, stored in the local config folder
-    AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
+  AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
+  # Centralized logging options (Airflow itself uses Python logging, but Docker log driver caps reduce host disk usage)
+  # Note: docker-compose logging options are applied per-service below using the 'logging' key.
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
+    # Use host logs mount only for persistence during development. For low-disk setups
+    # prefer ephemeral tmpfs mounts set per-service (below) or configure a remote logging backend.
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
@@ -120,6 +132,15 @@ services:
     command: api-server
     ports:
       - "8080:8080"
+    # Resource limits & ephemeral logs
+    mem_limit: 512m
+    tmpfs:
+      - /opt/airflow/logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8080/api/v2/version"]
       interval: 30s
@@ -135,6 +156,14 @@ services:
   airflow-scheduler:
     <<: *airflow-common
     command: scheduler
+    mem_limit: 768m
+    tmpfs:
+      - /opt/airflow/logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
       interval: 30s
@@ -150,6 +179,14 @@ services:
   airflow-dag-processor:
     <<: *airflow-common
     command: dag-processor
+    mem_limit: 512m
+    tmpfs:
+      - /opt/airflow/logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     healthcheck:
       test: ["CMD-SHELL", 'airflow jobs check --job-type DagProcessorJob --hostname "$${HOSTNAME}"']
       interval: 30s
@@ -181,6 +218,14 @@ services:
       DUMB_INIT_SETSID: "0"
     restart: always
     depends_on:
+    mem_limit: 1024m
+    tmpfs:
+      - /opt/airflow/logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
       <<: *airflow-common-depends-on
       airflow-apiserver:
         condition: service_healthy
