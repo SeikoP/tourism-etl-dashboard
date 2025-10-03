@@ -259,7 +259,7 @@ def transform_and_load_incremental(**context):
         src_path = os.path.join(project_root, 'src')
         sys.path.insert(0, src_path)
 
-        from etl.tranform.data_transformer import DataTransformer
+        from etl.transform.data_transformer import DataTransformer
         from etl.load.data_loader import DataLoader
 
         # Transform new data
@@ -316,7 +316,16 @@ def transform_and_load_incremental(**context):
                         continue
 
                 if transformed_details:
-                    details_loaded = loader.load_hotel_details_batch(transformed_details)
+                    # Save to temp file and load
+                    import tempfile
+                    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as f:
+                        json.dump(transformed_details, f)
+                        temp_file = f.name
+                    
+                    details_loaded = loader.load_hotel_details(temp_file)
+                    
+                    # Clean up temp file
+                    os.unlink(temp_file)
 
         logging.info(f"Transformed and loaded: {hotels_loaded} hotels, {details_loaded} details")
         return hotels_loaded + details_loaded
