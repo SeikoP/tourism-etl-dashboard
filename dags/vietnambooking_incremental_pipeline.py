@@ -259,7 +259,7 @@ def transform_and_load_incremental(**context):
         src_path = os.path.join(project_root, 'src')
         sys.path.insert(0, src_path)
 
-        from etl.transform.data_transformer import DataTransformer
+        from etl.tranform.data_transformer import DataTransformer
         from etl.load.data_loader import DataLoader
 
         # Transform new data
