@@ -338,6 +338,35 @@ def transform_and_load_incremental(**context):
         logging.error(f"Error in transform_and_load_incremental: {e}")
         raise
 
+def load_locations_to_db(**context):
+    """Task: Load locations vào database"""
+    import sys
+    import os
+
+    try:
+        project_root = '/opt/airflow'
+        src_path = os.path.join(project_root, 'src')
+        sys.path.insert(0, src_path)
+
+        from etl.load.data_loader import DataLoader
+
+        # Load locations
+        loader = DataLoader()
+        locations_file = "/opt/airflow/data/raw/vietnambooking/locations.json"
+
+        if not os.path.exists(locations_file):
+            logging.warning("Locations file not found")
+            return 0
+
+        result = loader.load_locations(locations_file)
+        logging.info(f"Loaded locations: {result['inserted']} inserted, {result['updated']} updated, {result['errors']} errors")
+
+        return result['inserted'] + result['updated']
+
+    except Exception as e:
+        logging.error(f"Error loading locations: {e}")
+        raise
+
 def generate_quota_report(**context):
     """Task 5: Generate quota usage report"""
     from utils.ai_rate_limiter import ai_rate_limiter
@@ -388,6 +417,12 @@ extract_details_task = PythonOperator(
     dag=dag,
 )
 
+load_locations_task = PythonOperator(
+    task_id='load_locations',
+    python_callable=load_locations_to_db,
+    dag=dag,
+)
+
 transform_load_task = PythonOperator(
     task_id='transform_and_load',
     python_callable=transform_and_load_incremental,
@@ -401,4 +436,4 @@ report_task = PythonOperator(
 )
 
 # Set dependencies
-check_quota_task >> extract_hotels_task >> extract_details_task >> transform_load_task >> report_task
+check_quota_task >> extract_hotels_task >> extract_details_task >> load_locations_task >> transform_load_task >> report_task
