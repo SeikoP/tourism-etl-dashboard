@@ -6,7 +6,7 @@ import logging
 import os
 from typing import Dict, List, Any, Optional
 from datetime import datetime
-from sqlalchemy import create_engine, Column, Integer, String, Text, Float, DateTime, Boolean, JSON, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Text, Float, DateTime, Boolean, JSON, ForeignKey, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.exc import SQLAlchemyError
@@ -117,9 +117,10 @@ class DataLoader:
         """Initialize database connection"""
 
         if not connection_string:
-            # Try localhost first (for local development), then Docker container
+            # Try multiple connection options for different environments
             connection_strings = [
                 "postgresql+psycopg2://airflow:airflow@localhost:5433/airflow",  # Local PostgreSQL on port 5433
+                "postgresql+psycopg2://airflow:airflow@172.17.190.15:5433/airflow",  # WSL IP (common range)
                 "postgresql+psycopg2://airflow:airflow@postgres/airflow",       # Docker container
                 "postgresql+psycopg2://airflow:airflow@localhost:5432/airflow", # Fallback to port 5432
             ]
@@ -129,7 +130,7 @@ class DataLoader:
                 try:
                     test_engine = create_engine(conn_str, pool_pre_ping=True)
                     with test_engine.connect() as conn:
-                        conn.execute("SELECT 1")
+                        conn.execute(text("SELECT 1"))
                         connection_string = conn_str
                         logger.info(f"Connected to database: {conn_str}")
                         break

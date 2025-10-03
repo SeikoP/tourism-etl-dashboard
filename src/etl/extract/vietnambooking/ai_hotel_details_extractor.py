@@ -11,6 +11,9 @@ import os
 from typing import List, Dict, Any, Optional
 import re
 
+# Import rate limiter
+from utils.ai_rate_limiter import make_ai_request_with_rate_limit
+
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -268,7 +271,9 @@ class AIHotelDetailsExtractor:
             }
 
             async with httpx.AsyncClient(timeout=120) as client:
-                response = await client.post(
+                # Use rate limiter for AI API calls
+                response = await make_ai_request_with_rate_limit(
+                    client.post,
                     f"{self.crawl4ai_url}/crawl",
                     json=payload,
                     headers={"Content-Type": "application/json"}
