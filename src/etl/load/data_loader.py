@@ -117,8 +117,28 @@ class DataLoader:
         """Initialize database connection"""
 
         if not connection_string:
-            # Default connection for Docker environment
-            connection_string = "postgresql+psycopg2://airflow:airflow@postgres/airflow"
+            # Try localhost first (for local development), then Docker container
+            connection_strings = [
+                "postgresql+psycopg2://airflow:airflow@localhost:5433/airflow",  # Local PostgreSQL on port 5433
+                "postgresql+psycopg2://airflow:airflow@postgres/airflow",       # Docker container
+                "postgresql+psycopg2://airflow:airflow@localhost:5432/airflow", # Fallback to port 5432
+            ]
+
+            connection_string = None
+            for conn_str in connection_strings:
+                try:
+                    test_engine = create_engine(conn_str, pool_pre_ping=True)
+                    with test_engine.connect() as conn:
+                        conn.execute("SELECT 1")
+                        connection_string = conn_str
+                        logger.info(f"Connected to database: {conn_str}")
+                        break
+                except Exception as e:
+                    logger.warning(f"Failed to connect to {conn_str}: {e}")
+                    continue
+
+            if not connection_string:
+                raise Exception("Could not connect to any PostgreSQL instance")
 
         # Create engine with connection pooling
         self.engine = create_engine(
