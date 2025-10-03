@@ -450,23 +450,24 @@ class DataLoader:
                     if existing_hotel:
                         # Update existing hotel
                         existing_hotel.name = hotel_data['name']
-                        existing_hotel.location_name = hotel_data.get('location_name')
-                        existing_hotel.location_code = hotel_data.get('location_code')
                         # Update other fields as needed
                         session.commit()
                     else:
-                        # Create new hotel
                         # Find location
                         location = None
                         if 'location_code' in hotel_data:
                             location = session.query(Location).filter_by(location_code=hotel_data['location_code']).first()
 
+                        if not location:
+                            logger.warning(f"Location not found for hotel {hotel_data['name']}: {hotel_data.get('location_code')}")
+                            continue
+
                         hotel = Hotel(
+                            hotel_key=str(hash(hotel_data['url'])),
                             name=hotel_data['name'],
                             url=hotel_data['url'],
-                            location_name=hotel_data.get('location_name'),
-                            location_code=hotel_data.get('location_code'),
-                            location=location
+                            location_id=location.id,
+                            data_quality_score=hotel_data.get('data_quality_score', 0.0)
                         )
                         session.add(hotel)
                         session.commit()
