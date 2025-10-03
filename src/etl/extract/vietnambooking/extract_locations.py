@@ -234,5 +234,11 @@ async def main():
     else:
         logger.error("No locations extracted")
 
+# Standalone function for easy import
+async def extract_all_locations() -> List[Dict]:
+    """Standalone function to extract all locations"""
+    extractor = LocationExtractor()
+    return await extractor.extract_locations()
+
 if __name__ == "__main__":
     asyncio.run(main())

@@ -67,6 +67,7 @@ def incremental_extract_hotels(**context):
     import sys
     import os
     import traceback
+    import asyncio
     from datetime import datetime
 
     try:
@@ -108,7 +109,8 @@ def incremental_extract_hotels(**context):
         for location in locations[:5]:  # Process 5 locations per day để tránh quota
             logging.info(f"Processing location: {location['name']}")
             try:
-                hotels = extractor.extract_hotels_from_location(location['url'])
+                # Use asyncio to run the async method
+                hotels = asyncio.run(extractor.process_location(location))
                 if hotels:
                     # Filter out existing hotels
                     existing_urls = {h['url'] for h in existing_hotels}
