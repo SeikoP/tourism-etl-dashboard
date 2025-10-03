@@ -87,6 +87,7 @@ x-airflow-common:
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
     # The following line can be used to set a custom config file, stored in the local config folder
     AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
+    PYTHONPATH: '/opt/airflow/src:/opt/airflow'
   # Centralized logging options (Airflow itself uses Python logging, but Docker log driver caps reduce host disk usage)
   # Note: docker-compose logging options are applied per-service below using the 'logging' key.
   volumes:
