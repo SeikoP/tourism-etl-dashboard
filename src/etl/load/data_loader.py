@@ -111,7 +111,7 @@ class HotelDetail(Base):
         return f"<HotelDetail(hotel_id={self.hotel_id}, extraction_date={self.extraction_date})>"
 
 class DataLoader:
-    """Load transformed data into PostgreSQL database"""
+    """Load transformed data into PostgreSQL touristdb database"""
 
     def __init__(self, connection_string: str = None):
         """Initialize database connection"""
@@ -119,10 +119,15 @@ class DataLoader:
         if not connection_string:
             # Try multiple connection options for different environments
             connection_strings = [
-                "postgresql+psycopg2://airflow:airflow@localhost:5433/airflow",  # Local PostgreSQL on port 5433
-                "postgresql+psycopg2://airflow:airflow@172.17.190.15:5433/airflow",  # WSL IP (common range)
-                "postgresql+psycopg2://airflow:airflow@postgres/airflow",       # Docker container
-                "postgresql+psycopg2://airflow:airflow@localhost:5432/airflow", # Fallback to port 5432
+                "postgresql+psycopg2://airflow:airflow@localhost:5433/touristdb",  # Local PostgreSQL touristdb on port 5433
+                "postgresql+psycopg2://airflow:airflow@172.17.190.15:5433/touristdb",  # WSL IP touristdb (common range)
+                "postgresql+psycopg2://airflow:airflow@postgres/touristdb",       # Docker container touristdb
+                "postgresql+psycopg2://airflow:airflow@localhost:5432/touristdb", # Fallback to port 5432 touristdb
+                # Fallback to airflow database if touristdb not available
+                "postgresql+psycopg2://airflow:airflow@localhost:5433/airflow",  # Local PostgreSQL airflow on port 5433
+                "postgresql+psycopg2://airflow:airflow@172.17.190.15:5433/airflow",  # WSL IP airflow (common range)
+                "postgresql+psycopg2://airflow:airflow@postgres/airflow",       # Docker container airflow
+                "postgresql+psycopg2://airflow:airflow@localhost:5432/airflow", # Fallback to port 5432 airflow
             ]
 
             connection_string = None

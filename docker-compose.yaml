@@ -116,6 +116,7 @@ services:
       POSTGRES_DB: airflow
     volumes:
       - postgres-db-volume:/var/lib/postgresql/data
+      - ${AIRFLOW_PROJ_DIR:-.}/init-touristdb.sql:/docker-entrypoint-initdb.d/init-touristdb.sql
     ports:
       - "5433:5432"  # Changed from 5432 to 5433 to avoid conflicts
     healthcheck:
