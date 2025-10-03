@@ -453,6 +453,7 @@ services:
     networks:
       - default
 
+
 volumes:
   postgres-db-volume:
   crawl4ai-data:
