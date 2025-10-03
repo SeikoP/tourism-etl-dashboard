@@ -41,7 +41,7 @@ dag = DAG(
 
 def check_quota_and_proceed(**context):
     """Task 1: Check quota và quyết định có tiếp tục không"""
-    from utils.ai_rate_limiter import ai_rate_limiter
+    from src.utils.ai_rate_limiter import ai_rate_limiter
 
     status = ai_rate_limiter.get_status()
 
