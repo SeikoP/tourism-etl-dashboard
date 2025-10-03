@@ -81,9 +81,9 @@ def incremental_extract_hotels(**context):
 
         # Check if we need to extract locations
         locations_file = "/opt/airflow/data/raw/vietnambooking/locations.json"
-        if not os.path.exists(locations_file):
+        if not os.path.exists(locations_file) or os.path.getsize(locations_file) == 0:
             logging.info("Extracting locations...")
-            locations = extract_all_locations()
+            locations = asyncio.run(extract_all_locations())
             os.makedirs(os.path.dirname(locations_file), exist_ok=True)
             with open(locations_file, 'w', encoding='utf-8') as f:
                 json.dump(locations, f, ensure_ascii=False, indent=2)
@@ -107,7 +107,7 @@ def incremental_extract_hotels(**context):
         locations = json.load(open(locations_file, 'r', encoding='utf-8'))
 
         for location in locations[:5]:  # Process 5 locations per day để tránh quota
-            logging.info(f"Processing location: {location['name']}")
+            logging.info(f"Processing location: {location['location_name']}")
             try:
                 # Use asyncio to run the async method
                 hotels = asyncio.run(extractor.process_location(location))
@@ -118,13 +118,13 @@ def incremental_extract_hotels(**context):
 
                     if new_hotel_list:
                         new_hotels.extend(new_hotel_list)
-                        logging.info(f"Found {len(new_hotel_list)} new hotels in {location['name']}")
+                        logging.info(f"Found {len(new_hotel_list)} new hotels in {location['location_name']}")
                     else:
-                        logging.info(f"No new hotels in {location['name']}")
+                        logging.info(f"No new hotels in {location['location_name']}")
                 else:
-                    logging.warning(f"No hotels found in {location['name']}")
+                    logging.warning(f"No hotels found in {location['location_name']}")
             except Exception as e:
-                logging.error(f"Error extracting hotels from {location['name']}: {e}")
+                logging.error(f"Error extracting hotels from {location['location_name']}: {e}")
                 continue
 
         # Save new hotels
@@ -221,7 +221,7 @@ def incremental_extract_details(**context):
 
             try:
                 # Create temporary file cho batch này
-                batch_data = [{'url': h['url'], 'name': h['name']} for h in batch_hotels]
+                batch_data = [{'url': h['url'], 'name': h['name'], 'location_name': h.get('location_name', ''), 'location_code': h.get('location_code', '')} for h in batch_hotels]
                 temp_file = f"/tmp/batch_{start_idx}.json"
                 with open(temp_file, 'w', encoding='utf-8') as f:
                     json.dump(batch_data, f, ensure_ascii=False, indent=2)

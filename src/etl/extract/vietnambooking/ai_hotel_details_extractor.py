@@ -11,6 +11,9 @@ import os
 from typing import List, Dict, Any, Optional
 import re
 
+# Import Groq client
+from groq import Groq
+
 # Import rate limiter
 from utils.ai_rate_limiter import make_ai_request_with_rate_limit
 
@@ -20,8 +23,15 @@ logger = logging.getLogger(__name__)
 
 class AIHotelDetailsExtractor:
     def __init__(self):
-        self.crawl4ai_url = "http://crawl4ai:11235"  # Internal Docker network
-        self.external_crawl4ai_url = "http://localhost:11235"  # For external access
+        # Detect if running inside Docker or external
+        self.is_in_docker = os.path.exists('/.dockerenv') or os.environ.get('CRAWL4AI_IN_DOCKER') == 'true'
+
+        if self.is_in_docker:
+            self.crawl4ai_url = "http://crawl4ai:11235"  # Internal Docker network
+        else:
+            self.crawl4ai_url = "http://localhost:11235"  # External access
+
+        logger.info(f"AIHotelDetailsExtractor initialized - Docker: {self.is_in_docker}, URL: {self.crawl4ai_url}")
 
         # Configuration for AI-powered extraction
         self.batch_size = 10  # Smaller batches for AI processing
@@ -189,117 +199,16 @@ class AIHotelDetailsExtractor:
             return False
 
     async def _try_ai_extraction(self, hotel: Dict[str, Any]) -> Dict[str, Any]:
-        """Try AI extraction, return None if it fails"""
+        """Try AI extraction using direct Groq API, return None if it fails"""
 
         try:
-            # Check if Crawl4AI service is available first
-            crawl4ai_available = await self._check_crawl4ai_health()
-            if not crawl4ai_available:
-                logger.warning(f"Crawl4AI service not available for {hotel['name']}")
+            # Get Groq API key from environment
+            api_key = os.getenv('GROQ_API_KEY')
+            if not api_key:
+                logger.warning(f"Groq API key not found for {hotel['name']}")
                 return None
 
-            # Enhanced AI extraction for comprehensive hotel data
-            payload = {
-                "urls": [hotel['url']],
-                "extraction_prompt": """
-                Extract ALL hotel amenities and facilities from this Vietnamese hotel page.
-                Look for these specific amenities (tiện ích):
-
-                HOTEL AMENITIES (extract as many as possible):
-                - WiFi (internet)
-                - Hồ bơi (swimming pool)
-                - Nhà hàng (restaurant)
-                - Đỗ xe (parking)
-                - Spa/Massage (spa)
-                - Phòng gym/Fitness (gym)
-                - Đưa đón sân bay (airport shuttle)
-                - Phục vụ phòng (room service)
-                - Giặt ủi (laundry)
-                - Trung tâm hội nghị (business center)
-                - Phòng họp (conference room)
-                - Quầy bar (bar/lounge)
-                - Vườn (garden)
-                - Thang máy (elevator)
-                - Lễ tân 24h (24h front desk)
-                - Điều hòa (air conditioning)
-                - Két sắt (safe deposit)
-                - Đổi tiền (currency exchange)
-                - Quầy tour (tour desk)
-                - Thuê xe (car rental)
-                - Trông trẻ (babysitting)
-                - Cho phép thú cưng (pets allowed)
-                - Phòng không hút thuốc (non-smoking)
-                - Phòng gia đình (family rooms)
-                - Bữa sáng (breakfast)
-                - Máy pha trà/cà phê (coffee/tea maker)
-                - TV (television)
-                - Minibar (minibar)
-                - Ban công (balcony)
-                - Phòng tắm riêng (private bathroom)
-                - Any other amenities you find
-
-                Also extract:
-                - Hotel description (mô tả khách sạn)
-                - Room descriptions (mô tả phòng)
-                - Policies (quy định)
-                - Nearby attractions (địa điểm gần đó)
-
-                Return as JSON with 'amenities' as array of strings, and other fields as appropriate.
-                Be thorough - look in sidebars, facility lists, and descriptive text.
-                """,
-                "extraction_schema": {
-                    "type": "object",
-                    "properties": {
-                        "amenities": {
-                            "type": "array",
-                            "items": {"type": "string"},
-                            "description": "List of all hotel amenities found"
-                        },
-                        "description": {"type": "string"},
-                        "room_descriptions": {"type": "array", "items": {"type": "string"}},
-                        "policies": {"type": "object"},
-                        "nearby_attractions": {"type": "array", "items": {"type": "string"}},
-                        "additional_info": {"type": "object"}
-                    },
-                    "required": ["amenities"]
-                },
-                "wait_for": 5,  # Give more time for complex pages
-                "remove_overlay_elements": True,
-                "word_count_threshold": 5,
-                "css_selector": ".hotel-facilities, .amenities, .facilities, .services, .features, .hotel-details, .property-highlights",
-                "only_text": False
-            }
-
-            async with httpx.AsyncClient(timeout=120) as client:
-                # Use rate limiter for AI API calls
-                response = await make_ai_request_with_rate_limit(
-                    client.post,
-                    f"{self.crawl4ai_url}/crawl",
-                    json=payload,
-                    headers={"Content-Type": "application/json"}
-                )
-
-                if response.status_code == 200:
-                    result = response.json()
-
-                    if 'results' in result and len(result['results']) > 0:
-                        crawl_result = result['results'][0]
-                        if 'extracted_content' in crawl_result and crawl_result['extracted_content']:
-                            ai_data = crawl_result['extracted_content']
-                            logger.info(f"AI extraction successful for {hotel['name']}")
-                            return ai_data
-
-            logger.warning(f"AI extraction returned empty/null for {hotel['name']}")
-            return None
-
-        except Exception as e:
-            logger.warning(f"AI extraction failed for {hotel['name']}: {e}")
-            return None
-
-    async def _extract_basic_info(self, hotel: Dict[str, Any]) -> Dict[str, Any]:
-        """Extract basic hotel information using BeautifulSoup"""
-
-        try:
+            # First, fetch the HTML content of the hotel page
             headers = {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -309,121 +218,113 @@ class AIHotelDetailsExtractor:
                 'Connection': 'keep-alive',
             }
 
-            async with httpx.AsyncClient(headers=headers, timeout=30) as client:
+            async with httpx.AsyncClient(headers=headers, timeout=30, follow_redirects=True) as client:
                 response = await client.get(hotel['url'])
+                if response.status_code != 200:
+                    logger.warning(f"Failed to fetch HTML for {hotel['name']}: {response.status_code}")
+                    return None
 
-            from bs4 import BeautifulSoup
-            soup = BeautifulSoup(response.text, 'html.parser')
+                html_content = response.text
+                logger.info(f"Fetched HTML content for {hotel['name']}: {len(html_content)} characters")
 
-            # Extract basic information
-            data = {}
+            # Initialize Groq client
+            client = Groq(api_key=api_key)
 
-            # Hotel name
-            h1 = soup.find('h1')
-            data['hotel_name'] = h1.get_text(strip=True) if h1 else None
+            # Create extraction prompt with HTML content
+            extraction_prompt = f"""
+            Extract ALL hotel amenities and facilities from this Vietnamese hotel page HTML content.
+            Look for these specific amenities (tiện ích):
 
-            # Address
-            address_elem = soup.select_one('.hotel-address, .address, [itemprop="address"]')
-            data['address'] = address_elem.get_text(strip=True) if address_elem else None
+            HOTEL AMENITIES (extract as many as possible):
+            - WiFi (internet)
+            - Hồ bơi (swimming pool)
+            - Nhà hàng (restaurant)
+            - Đỗ xe (parking)
+            - Spa/Massage (spa)
+            - Phòng gym/Fitness (gym)
+            - Đưa đón sân bay (airport shuttle)
+            - Phục vụ phòng (room service)
+            - Giặt ủi (laundry)
+            - Trung tâm hội nghị (business center)
+            - Phòng họp (conference room)
+            - Quầy bar (bar/lounge)
+            - Vườn (garden)
+            - Thang máy (elevator)
+            - Lễ tân 24h (24h front desk)
+            - Điều hòa (air conditioning)
+            - Két sắt (safe deposit)
+            - Đổi tiền (currency exchange)
+            - Quầy tour (tour desk)
+            - Thuê xe (car rental)
+            - Trông trẻ (babysitting)
+            - Cho phép thú cưng (pets allowed)
+            - Phòng không hút thuốc (non-smoking)
+            - Phòng gia đình (family rooms)
+            - Bữa sáng (breakfast)
+            - Máy pha trà/cà phê (coffee/tea maker)
+            - TV (television)
+            - Minibar (minibar)
+            - Ban công (balcony)
+            - Phòng tắm riêng (private bathroom)
+            - Any other amenities you find
 
-            # Phone
-            phone_elem = soup.select_one('.phone, .contact-phone, .hotel-phone, a[href^="tel:"]')
-            if phone_elem:
-                if phone_elem.name == 'a' and phone_elem.get('href', '').startswith('tel:'):
-                    data['phone'] = phone_elem.get('href', '').replace('tel:', '')
-                else:
-                    data['phone'] = phone_elem.get_text(strip=True)
+            Also extract:
+            - Hotel description (mô tả khách sạn)
+            - Room descriptions (mô tả phòng)
+            - Policies (quy định)
+            - Nearby attractions (địa điểm gần đó)
 
-            # Price with detailed analysis
-            price_elem = soup.select_one('.price, .hotel-price, .rate, .price-range')
-            if price_elem:
-                price_text = price_elem.get_text(strip=True)
-                data['price_range'] = price_text
+            HTML CONTENT:
+            {html_content[:8000]}  # Limit content to avoid token limits
 
-                # Extract detailed pricing information
-                import re
-                price_pattern = re.compile(r'(\d{1,3}(?:,\d{3})*(?:\.\d+)?)\s*(VNĐ|VND|đ|₫)?', re.IGNORECASE)
-                price_matches = price_pattern.findall(price_text)
+            Return ONLY valid JSON with this exact structure:
+            {{
+                "amenities": ["amenity1", "amenity2", ...],
+                "description": "hotel description text",
+                "room_descriptions": ["room desc 1", "room desc 2"],
+                "policies": ["policy 1", "policy 2"],
+                "nearby_attractions": ["attraction 1", "attraction 2"]
+            }}
 
-                if price_matches:
-                    prices = []
-                    for match in price_matches:
-                        price_str, currency = match
-                        price_numeric = float(price_str.replace(',', ''))
-                        prices.append(price_numeric)
+            Return ONLY valid JSON without any markdown formatting, code blocks, or additional text.
+            """ + "Start your response directly with { and end with }."
 
-                    if prices:
-                        data['price_analysis'] = {
-                            'min_price': min(prices),
-                            'max_price': max(prices),
-                            'avg_price': sum(prices) / len(prices),
-                            'price_count': len(prices),
-                            'currency': 'VND',
-                            'formatted_range': f"{min(prices):,.0f} - {max(prices):,.0f} VND"
+            # Use rate limiter for AI API calls
+            async def make_groq_request():
+                return client.chat.completions.create(
+                    model="gemma2-9b-it",
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": extraction_prompt
                         }
+                    ],
+                    temperature=0.1,
+                    max_completion_tokens=1024,
+                    top_p=1,
+                    stream=False
+                )
 
-            # Star rating
-            star_elem = soup.select_one('.star-rating, .rating, .stars, [itemprop="ratingValue"]')
-            data['star_rating'] = star_elem.get_text(strip=True) or star_elem.get('content') if star_elem else None
+            # Apply rate limiting
+            completion = await make_ai_request_with_rate_limit(make_groq_request)
 
-            # Meta description
-            meta_desc = soup.find('meta', attrs={'name': 'description'})
-            data['meta_description'] = meta_desc.get('content') if meta_desc else None
+            response_content = completion.choices[0].message.content
+            logger.info(f"Groq AI response received for {hotel['name']}: {len(response_content)} characters")
+            logger.info(f"Raw AI response: {response_content[:500]}...")
 
-            # Enhanced amenities extraction (multiple selectors for VietnamBooking)
-            amenities = []
-            amenity_selectors = [
-                '.amenities li', '.facilities li', '.services li', '.features li',
-                '.hotel-amenities li', '.property-amenities li', '.facility-list li',
-                '.amenities .item', '.facilities .item', '.services .item',
-                '.amenity-item', '.facility-item', '.service-item',
-                '.hotel-features li', '.property-features li',
-                '.amenities ul li', '.facilities ul li',
-                '[class*="amenit"]', '[class*="facilit"]', '[class*="service"]',
-                '.highlight-item', '.feature-item'
-            ]
-
-            for selector in amenity_selectors:
-                elements = soup.select(selector)
-                for elem in elements:
-                    amenity = elem.get_text(strip=True)
-                    if amenity and len(amenity) > 1 and len(amenity) < 100:  # Reasonable length
-                        # Clean up common prefixes/suffixes
-                        amenity = re.sub(r'^(✓|•|\*|\-)\s*', '', amenity)
-                        amenity = re.sub(r'\s*(✓|•|\*|\-)$', '', amenity)
-
-                        # Skip invalid amenities (room listings, etc.)
-                        if self._is_valid_amenity(amenity):
-                            if amenity and amenity not in amenities:
-                                amenities.append(amenity)
-
-            # Also look for amenities in text content
-            text_content = soup.get_text()
-            common_amenities = [
-                'WiFi', 'wifi', 'internet', 'hồ bơi', 'swimming pool', 'pool',
-                'nhà hàng', 'restaurant', 'đỗ xe', 'parking', 'spa', 'massage',
-                'gym', 'fitness', 'phòng gym', 'đưa đón sân bay', 'airport shuttle',
-                'phục vụ phòng', 'room service', 'giặt ủi', 'laundry',
-                'trung tâm hội nghị', 'business center', 'phòng họp', 'conference',
-                'quầy bar', 'bar', 'lounge', 'vườn', 'garden', 'thang máy', 'elevator',
-                'lễ tân 24h', '24h front desk', 'điều hòa', 'air conditioning',
-                'két sắt', 'safe', 'đổi tiền', 'currency exchange', 'quầy tour', 'tour desk'
-            ]
-
-            for amenity in common_amenities:
-                if amenity.lower() in text_content.lower() and amenity not in amenities:
-                    amenities.append(amenity)
-
-            # Remove duplicates and limit
-            amenities = list(set(amenities))[:30]  # Allow more amenities
-            data['basic_amenities'] = amenities
-
-            logger.info(f"Basic extraction successful for {hotel['name']}: {len(data)} fields, {len(amenities)} cleaned amenities")
-            return data
+            # Try to parse JSON response
+            try:
+                ai_data = json.loads(response_content)
+                logger.info(f"AI extraction successful for {hotel['name']}: {type(ai_data)} - amenities: {len(ai_data.get('amenities', []))}")
+                return ai_data
+            except json.JSONDecodeError as e:
+                logger.warning(f"Failed to parse AI response as JSON for {hotel['name']}: {e}")
+                logger.warning(f"Raw response: {response_content[:200]}...")
+                return None
 
         except Exception as e:
-            logger.error(f"Basic extraction failed for {hotel['name']}: {e}")
-            return {}
+            logger.warning(f"AI extraction failed for {hotel['name']}: {e}")
+            return None
 
     def _is_valid_amenity(self, amenity: str) -> bool:
         """Check if text is a valid amenity (not room listing, etc.)"""
@@ -491,7 +392,7 @@ class AIHotelDetailsExtractor:
                 'Connection': 'keep-alive',
             }
 
-            async with httpx.AsyncClient(headers=headers, timeout=30) as client:
+            async with httpx.AsyncClient(headers=headers, timeout=30, follow_redirects=True) as client:
                 response = await client.get(hotel['url'])
 
             from bs4 import BeautifulSoup

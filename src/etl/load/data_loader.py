@@ -433,6 +433,107 @@ class DataLoader:
         finally:
             session.close()
 
+    def load_hotels_batch(self, hotels_data: List[Dict[str, Any]]) -> int:
+        """Load a batch of hotel data into database"""
+
+        logger.info(f"Loading {len(hotels_data)} hotels batch")
+
+        session = self.SessionLocal()
+        inserted_count = 0
+
+        try:
+            for hotel_data in hotels_data:
+                try:
+                    # Check if hotel exists
+                    existing_hotel = session.query(Hotel).filter_by(url=hotel_data['url']).first()
+
+                    if existing_hotel:
+                        # Update existing hotel
+                        existing_hotel.name = hotel_data['name']
+                        existing_hotel.location_name = hotel_data.get('location_name')
+                        existing_hotel.location_code = hotel_data.get('location_code')
+                        # Update other fields as needed
+                        session.commit()
+                    else:
+                        # Create new hotel
+                        # Find location
+                        location = None
+                        if 'location_code' in hotel_data:
+                            location = session.query(Location).filter_by(location_code=hotel_data['location_code']).first()
+
+                        hotel = Hotel(
+                            name=hotel_data['name'],
+                            url=hotel_data['url'],
+                            location_name=hotel_data.get('location_name'),
+                            location_code=hotel_data.get('location_code'),
+                            location=location
+                        )
+                        session.add(hotel)
+                        session.commit()
+                        inserted_count += 1
+
+                except Exception as e:
+                    logger.error(f"Error loading hotel {hotel_data.get('name', 'unknown')}: {e}")
+                    session.rollback()
+                    continue
+
+            logger.info(f"Successfully loaded {inserted_count} hotels in batch")
+            return inserted_count
+
+        finally:
+            session.close()
+
+    def load_hotel_details_batch(self, details_data: List[Dict[str, Any]]) -> int:
+        """Load a batch of hotel details data into database"""
+
+        logger.info(f"Loading {len(details_data)} hotel details batch")
+
+        session = self.SessionLocal()
+        inserted_count = 0
+
+        try:
+            for detail_data in details_data:
+                try:
+                    # Find hotel by URL
+                    hotel_url = detail_data['basic_info']['url']
+                    hotel_key = str(hash(hotel_url))
+
+                    hotel = session.query(Hotel).filter_by(url=hotel_url).first()
+                    if not hotel:
+                        logger.warning(f"Hotel not found for details: {hotel_url}")
+                        continue
+
+                    # Check if details already exist
+                    existing_details = session.query(HotelDetail).filter_by(hotel_key=hotel_key).first()
+
+                    if existing_details:
+                        # Update existing details
+                        existing_details.details_data = detail_data
+                        existing_details.last_updated = datetime.utcnow()
+                        session.commit()
+                    else:
+                        # Create new details
+                        hotel_details = HotelDetail(
+                            hotel_key=hotel_key,
+                            hotel=hotel,
+                            details_data=detail_data,
+                            last_updated=datetime.utcnow()
+                        )
+                        session.add(hotel_details)
+                        session.commit()
+                        inserted_count += 1
+
+                except Exception as e:
+                    logger.error(f"Error loading hotel details for {detail_data.get('basic_info', {}).get('name', 'unknown')}: {e}")
+                    session.rollback()
+                    continue
+
+            logger.info(f"Successfully loaded {inserted_count} hotel details in batch")
+            return inserted_count
+
+        finally:
+            session.close()
+
     def close(self):
         """Close database connections"""
         self.engine.dispose()
