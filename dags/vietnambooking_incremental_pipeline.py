@@ -278,9 +278,11 @@ def transform_and_load_incremental(**context):
         transformed_hotels = []
         for hotel in hotels[-100:]:  # Chỉ process 100 hotels gần nhất
             try:
-                transformed = transformer._validate_and_clean_hotel(hotel)
-                if transformed:
-                    transformed_hotels.append(transformed)
+                result = transformer._validate_and_clean_hotel(hotel)
+                if result.is_valid:
+                    transformed_hotels.append(result.cleaned_data)
+                else:
+                    logging.warning(f"Hotel validation failed: {result.errors}")
             except Exception as e:
                 logging.warning(f"Error transforming hotel {hotel.get('name', 'unknown')}: {e}")
                 continue
@@ -308,9 +310,11 @@ def transform_and_load_incremental(**context):
                 transformed_details = []
                 for detail in details:
                     try:
-                        transformed = transformer._validate_and_clean_hotel_detail(detail)
-                        if transformed:
-                            transformed_details.append(transformed)
+                        result = transformer._validate_and_clean_hotel_detail(detail)
+                        if result.is_valid:
+                            transformed_details.append(result.cleaned_data)
+                        else:
+                            logging.warning(f"Detail validation failed: {result.errors}")
                     except Exception as e:
                         logging.warning(f"Error transforming detail: {e}")
                         continue
