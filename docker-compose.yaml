@@ -51,6 +51,8 @@ x-airflow-common:
   # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
   image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:latest}
   # build: .
+  env_file:
+    - .env
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
@@ -225,37 +227,6 @@ services:
       airflow-init:
         condition: service_completed_successfully
 
-  airflow-worker:
-    <<: *airflow-common
-    command: celery worker
-    healthcheck:
-      # yamllint disable rule:line-length
-      test:
-        - "CMD-SHELL"
-        - 'celery --app airflow.providers.celery.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}" || celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
-    environment:
-      <<: *airflow-common-env
-      # Required to handle warm shutdown of the celery workers properly
-      # See https://airflow.apache.org/docs/docker-stack/entrypoint.html#signal-propagation
-      DUMB_INIT_SETSID: "0"
-    restart: always
-    depends_on:
-      <<: *airflow-common-depends-on
-      airflow-apiserver:
-        condition: service_healthy
-      airflow-init:
-        condition: service_completed_successfully
-    mem_limit: 1024m
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
   airflow-triggerer:
     <<: *airflow-common
     command: triggerer
@@ -402,25 +373,28 @@ services:
 
   # Crawl4AI Service for advanced web scraping with AI integration
   crawl4ai:
-    image: unclecode/crawl4ai:latest
+    # image: unclecode/crawl4ai:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.crawl4ai
     container_name: crawl4ai-server
     ports:
-      - "11235:11235"  # Crawl4AI API port
+      - "11234:11234"  # Crawl4AI API port
     environment:
       # Base Configuration
       - CRAWL4AI_BASE_DIRECTORY=/app/crawl4ai
       - CRAWL4AI_LOG_LEVEL=INFO
-      
+
       # AI API Keys (from .env file)
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - GROQ_API_KEY=${GROQ_API_KEY:-}
       - HUGGINGFACE_API_TOKEN=${HUGGINGFACE_API_TOKEN:-}
-      
-      # AI Configuration
+
+      # AI Configuration - Groq model is now set in Dockerfile
       - CRAWL4AI_ENABLE_AI=${CRAWL4AI_ENABLE_AI:-true}
-      - CRAWL4AI_DEFAULT_MODEL=${CRAWL4AI_DEFAULT_MODEL:-google/gemini-2.5-flash}
+      # - CRAWL4AI_DEFAULT_MODEL=${CRAWL4AI_DEFAULT_MODEL:-gemma2-9b-it}  # Now set in Dockerfile
       - CRAWL4AI_MAX_TOKENS=${CRAWL4AI_MAX_TOKENS:-4000}
       - CRAWL4AI_TEMPERATURE=${CRAWL4AI_TEMPERATURE:-0.1}
       
@@ -444,7 +418,7 @@ services:
           cpus: '1.0'  
           memory: 2G
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://localhost:11235/health"]
+      test: ["CMD", "curl", "--fail", "http://localhost:11234/health"]
       interval: 30s
       timeout: 10s
       retries: 5
